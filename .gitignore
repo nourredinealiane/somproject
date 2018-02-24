@@ -1,0 +1,8 @@
+#Ignorer dans tous les répertoires
+.directory
+build/*
+resultats/*
+somprojet.pro.*
+
+
+

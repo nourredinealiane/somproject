@@ -1,0 +1,22 @@
+HEADERS += \
+    algosomBDD.h \
+    shapeitem.h \
+    sortingbox.h \
+    windowSom.h \
+    evaluation.h \
+    som.h \
+    vecteur.h \
+    math.h \
+    qdata.h \
+    type.h
+
+SOURCES += \
+    algosomBDD.cpp \
+    shapeitem.cpp \
+    sortingbox.cpp \
+    windowSom.cpp \
+    evaluation.cpp \
+    som.cpp \
+    vecteur.cpp \
+    math.cpp \
+    qdata.cpp

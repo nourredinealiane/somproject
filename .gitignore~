@@ -1,0 +1,8 @@
+#Ignorer dans tous les répertoires
+.directory
+/somprojet/SOM/build/*
+/somprojet/SOM/ms/*
+/somprojet/SOM/windowSom/somprojet.pro.*
+
+
+
