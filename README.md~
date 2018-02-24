@@ -9,4 +9,12 @@ $ wget https://github.com/nourredinealiane/somproject.git
 $ unzip somproject-master.zip
 $ cd somproject-master
 $ sh execute.sh
+
 ```
+# Run
+
+```
+$ cd build
+$ ./som
+
+``` 
