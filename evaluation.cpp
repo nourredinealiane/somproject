@@ -73,6 +73,8 @@ double fmesure(Som *som, QVector<QString> &labels)
     return Fmesure ;
 }
 
+
+
 int gagnant(QMap <QString , int> &map)
 {
      int gnt = 1 ;
@@ -86,6 +88,7 @@ int gagnant(QMap <QString , int> &map)
     return gnt ;
 }
 
+
 QMap <QString , int> getMap(Som *som, QVector<QString> &labels, int x, int y)
 {
     Neurone ** SOM = som->getSom() ;
@@ -97,7 +100,6 @@ QMap <QString , int> getMap(Som *som, QVector<QString> &labels, int x, int y)
 
     return map ;
 }
-
 
 double purete(Som *som, QVector<QString> &labels)
 {   long  some = 0 ;
@@ -116,6 +118,136 @@ double purete(Som *som, QVector<QString> &labels)
         }
      }
     return (double)some/nb_vect ;
+}
+
+// nouvelle façon pour calculer la purete
+double fscore(QVector<int> &vect, QVector<QString> &labels)
+{   long long  TpFp = 0 ;
+    long long  Tp = 0 ;
+    long long Fn = 0 ;
+    long long Fp , Tn ;
+    long long nb_vect = labels.size() ;
+    QHash <QString , int> mapTp ;
+    QHash <QString , int> mapLabels ;
+
+    QHash<int , QVector<QString>> clusters ;
+    for (int i = 0;  i < nb_vect; i++)
+        clusters[vect.at(i)].append(labels.at(i)) ;
+
+    QHashIterator <int , QVector<QString>> it(clusters);
+     while ( it.hasNext())
+     {it.next();
+      int nb = it.value().size() ;
+      QHash <QString , int> map = getHash(it.value());
+      QHashIterator <QString , int> itm(map);
+       while ( itm.hasNext())
+       {itm.next();
+        int val = itm.value();
+        mapLabels[itm.key()] += val ;
+        if (val > 1)
+          mapTp[itm.key()] +=  val*(val-1)/2 ;
+       }
+
+       TpFp += nb*(nb-1)/2 ;
+     }
+
+    QHashIterator <QString , int> ittp(mapTp);
+     while ( ittp.hasNext())
+     {ittp.next();
+      Tp += ittp.value();
+     }
+
+     QHashIterator <QString , int> itlb(mapLabels);
+      while ( itlb.hasNext())
+      {itlb.next();
+          int valeur = itlb.value() ;
+          Fn += valeur*(valeur-1)/2 -mapTp[itlb.key()] ;
+       }
+    long long n = nb_vect*(nb_vect-1)/2 ;
+   // qDebug() <<"n = " << n ;
+
+    Fp = TpFp - Tp ;
+    Tn = n-TpFp-Fn ;
+
+    //qDebug() << "TP = " <<Tp ;
+    //qDebug() << "TN = " <<Tn ;
+    //qDebug() << "FP = " <<Fp ;
+    //qDebug() << "FN = " <<Fn ;
+
+    double RI = (double)(Tp+Tn)/n ;
+     double R, P, Fmesure ;
+    if (Tp+Fn == 0)
+        R = 0. ;
+    else
+        R = (double)Tp/(Tp+Fn) ;
+    if (Tp+Fp == 0)
+        P = 0. ;
+    else
+        P = (double)Tp/(Tp+Fp) ;
+
+    if (P+R == 0)
+        Fmesure = 0. ;
+    else
+        Fmesure = 2*P*R/(P+R) ;
+
+    // clacul d'indice de Rand ajustée ARI
+
+    double W = (double)(Tp+Fp)*(Tp+Fn)/n ;
+    double ARI = (Tp-W)/(Tp-W+(Fp+Fn)/2) ;
+
+    //double W1 = (double)(Tp+Fp)*(Tp+Fn)+(Tn+Fp)*(Tn+Fn) ;
+    //double ARI1 = (n*(Tp+Tn)-W1)/(n*n-W1) ;
+
+    qDebug() <<"Indice de Rand = "<<RI ;
+    qDebug() <<"Indice de Rand Ajustée = "<<ARI ;
+    //qDebug() <<"Indice de Rand Ajustée 1 = "<<ARI1 ;
+    qDebug() <<"Rappel = "<<R ;
+    qDebug() <<"Précision = "<<P ;
+    qDebug() <<"F-mesure = "<<Fmesure ;
+
+    return Fmesure ;
+}
+
+QHash <QString , int> getHash(QVector<QString> cluster)
+{
+    int size = cluster.size() ;
+    QHash <QString , int> map ;
+
+    for(int i = 0; i < size;  i++)
+        map[cluster.at(i)] ++ ;
+
+    return map ;
+}
+
+int gagnant(QHash <QString , int> &map)
+{
+     int gnt = 1 ;
+     QHashIterator <QString , int> it(map);
+      while ( it.hasNext())
+      {it.next();
+       if (it.value() > gnt)
+           gnt = it.value();
+      }
+
+    return gnt ;
+}
+
+double purete(QVector<int> &vect, QVector<QString> &labels)
+{   long  some = 0 ;
+    int nb = vect.size() ;
+    QHash<int , QVector<QString>> clusters ;
+
+    for (int i = 0;  i < nb; i++)
+        clusters[vect.at(i)].append(labels.at(i)) ;
+
+    QHashIterator <int , QVector<QString>> it(clusters);
+     while ( it.hasNext())
+     {it.next();
+      QHash <QString , int> map = getHash(it.value());
+      some += gagnant(map) ;
+     }
+
+  return (double)some/nb ;
 }
 
 double fscore(Som *som, QVector<QString> &labels)
@@ -199,9 +331,9 @@ double fscore(Som *som, QVector<QString> &labels)
     qDebug() <<"Indice de Rand = "<<RI ;
     qDebug() <<"Indice de Rand Ajustée = "<<ARI ;
     //qDebug() <<"Indice de Rand Ajustée 1 = "<<ARI1 ;
-    //qDebug() <<"Rappel = "<<R ;
-    //qDebug() <<"Précision = "<<P ;
-    //qDebug() <<"F-mesure = "<<Fmesure ;
+    qDebug() <<"Rappel = "<<R ;
+    qDebug() <<"Précision = "<<P ;
+    qDebug() <<"F-mesure = "<<Fmesure ;
 
     return Fmesure ;
 }
@@ -291,7 +423,8 @@ double f_mesureSom(Som *som, QVector<QString> &labels, double betai, double beta
   unsigned lig = som->somX() ;
   unsigned col = som->somY() ;
   int n = lig*col ;
-  QVector <double> distMatrix = som->getDistMatrix() ;
+  qmatrix vm = som->qcodebook() ;
+  QVector <double> distMatrix = getDistMatrix(vm) ;
   QPointF p = getMaxMinDistance(distMatrix) ;
   //double distMin = p.rx() ;
   double distMax = p.ry() ;
@@ -540,7 +673,8 @@ double f_mesureSomWordNet(Som *som, QVector<QString> &labels, double betai, doub
   unsigned lig = som->somX() ;
   unsigned col = som->somY() ;
   int n = lig*col ;
-  QVector <double> distMatrix = som->getDistMatrix() ;
+  qmatrix vm = som->qcodebook() ;
+  QVector <double> distMatrix = getDistMatrix(vm) ;
   QPointF p = getMaxMinDistance(distMatrix) ;
   //double distMin = p.rx() ;
   double distMax = p.ry() ;
@@ -602,10 +736,15 @@ double f_mesureSomWordNet(Som *som, QVector<QString> &labels, double betai, doub
     else
         aFmesure = 2*aP*aR/(aP+aR) ;
     qDebug() <<"\n******* F-mesure avec la distance entre vecteurs poids*****";
-    qDebug() <<"Indice de Rand avec voisinage= "<<aRI ;
-    qDebug() <<"Rappel avec voisnage = "<<aR ;
+    qDebug() << "TP = " <<TP ; //in same class and in in same cluster
+    qDebug() << "ATN = " <<ATN ;
+    qDebug() << "FP = " <<FP ;
+    qDebug() << "AFN = " <<AFN ;
+    qDebug() <<"n = "<<N ;
+    qDebug() <<"Indice de Rand = "<<aRI ;
+    qDebug() <<"Rappel  = "<<aR ;
     qDebug() <<"Précision = "<<aP ;
-    qDebug() <<"F-mesure avec voisinage = "<<aFmesure ;
+    qDebug() <<"F-mesure  = "<<aFmesure ;
 
     return aFmesure ;
 }
@@ -653,6 +792,41 @@ double precisionWordNet(Som *som, QVector<QString> &labels)
     qDebug() <<"Précision = "<< p ;
 
     return  p;
+}
+
+int gagnant(QVector<int> cluster, QVector<QString> &synsets)
+{ int size = cluster.size() ;
+  int gnt = 1 ;
+  int cpt = 1 ;
+
+    for(int i = 0; i < size-1;  i++)
+    { if (cpt > gnt) {gnt = cpt;}
+      cpt = 1 ;
+      for(int j = i+1; j < size;  j++)
+        { if (isCommun(synsets.at(cluster.at(i)) ,
+                       synsets.at(cluster.at(j))) )
+            cpt ++ ;
+        }
+
+    }
+   return gnt ;
+}
+
+double purete_synsets(QVector<int> &vect, QVector<QString> &synsets)
+{   long  some = 0 ;
+    int nb = vect.size() ;
+    QHash<int , QVector<int>> clusters ;
+
+    for (int i = 0;  i < nb; i++)
+        clusters[vect.at(i)].append(i) ;
+
+    QHashIterator <int , QVector<int>> it(clusters);
+     while ( it.hasNext())
+     {it.next();
+      some += gagnant(it.value(), synsets) ;
+     }
+
+  return (double)some/nb ;
 }
 
 double precision1WordNet(Som *som, QVector<QString> &labels)

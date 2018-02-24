@@ -29,4 +29,13 @@ double covariance(const QVector <double> & vect1 , const QVector <double> & vect
 double correlation(const QVector <double> & vect1 , const QVector <double> & vect2) ;
 
 double predicte_precision(QVector<pinstance> &vectp) ;
+
+QHash <QString , int> getHash(QVector<QString> cluster) ;
+int gagnant(QHash <QString , int> &map) ;
+double purete(QVector<int> &vect, QVector<QString> &labels) ;
+double fscore(QVector<int> &vect, QVector<QString> &labels) ;
+
+double purete_synsets(QVector<int> &vect, QVector<QString> &synsets) ;
+int gagnant(QVector<int> cluster, QVector<QString> &synsets) ;
 #endif // EVALUATION_H
+

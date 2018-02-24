@@ -22,6 +22,8 @@ typedef struct Neurone // pour carte de auto-organisatrices de Kohonen
     double squared_sum ;  // pour sparse data
     double w_coeff ;
     double taux_predict ; // taux de prédiction
+    int lien ; // sert pour concatener deux neurones
+
 
 } Neurone;
 
@@ -54,11 +56,11 @@ typedef double(*DISTANCE)(double *v1, double *v2, int dim);
 // la matrice de distances avec les coorrdonées
 struct trio
 {
-    int i, j ; 
-    float dist ; //distance entre les neurones i et j
+    int Ci, Cj ;
+    double dist ;
     bool operator<(const trio &other) const
      {
-         return (dist > other.dist);
+         return (dist < other.dist);
      }
 };
 

@@ -36,7 +36,7 @@ class Som : public QWidget
 
 
   Q_OBJECT
-    
+
     public:
 
     Som(unsigned, unsigned, unsigned, QString = "hexa");
@@ -53,6 +53,7 @@ class Som : public QWidget
     void initialize(qdataset &, int initial = 0) ; //initialiser au centre de données
     void initialize();          // initialiser aléatoirement entre 0 et 1
     void imprimeClasses(QVector <QString> labels, QString );
+    void imprimeClasses(QString );
     void write_clusters(QVector <QString> labels, QString f) ;
     int setSomModel(QString mon_fichier, bool head = true) ;
     int getSomModel(QString mon_fichier);
@@ -70,12 +71,16 @@ class Som : public QWidget
     int setUmatrix(QString mon_fichier) ;
     int setUmatrixPlus(QString mon_fichier) ;
 
-
-    QVector <double>  getDistMatrix() ;
+    // distance entre les vecteurs mémoires
+    QVector<trio> getDistMatrix() ;
     QVector <double>  getDistMatrixOnMap() ;
     QVector <trio> distMatrixVoisinage() ;
+    void write_distMatrixVoisinage(QVector <trio> t, QString f) ;
 
     QPointF getMaxMinDistance(QVector<double> &vect) ;
+
+    void reduire(QVector<trio> t, int n) ;
+    void concatener(int a, int b) ;
 
 
     // les geters
@@ -84,6 +89,7 @@ class Som : public QWidget
     int somX() {return Lig; }
     int somY() {return Col; }
     int size_Vect() {return Taille; }
+    int nb_clusters() {return Nb_classes ;}
     double * codebook() ;
     qmatrix qcodebook() ;
     int getNb_objets(int x, int y) ;

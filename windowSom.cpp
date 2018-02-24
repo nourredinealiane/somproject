@@ -201,8 +201,10 @@ void windowSom::classer()
         else
             dist = distCosinus ;
 
-       data = loadData(vectors->text(),tdata->currentText()) ;
+       /*qdataset dd*/data = loadData(vectors->text(),tdata->currentText()) ;
         //qdataset dtrain = loadData("../data/MNIST/sparse/dtrain42000bis.data", "sparse") ;
+       /*QVector<int> indx = read_csv1(motNeurone->text());
+       data = sample(dd,indx) ;*/
        qdataset dtest ;
        if (! motNeurone->text().isEmpty())
           dtest = loadData(motNeurone->text(), tdata->currentText()) ;
@@ -270,18 +272,24 @@ void windowSom::classer()
                                  som->initialize();
                                else qDebug() <<"codebooks initialize echec";
 
-           som->setSomModel("../resultats/sm.txt");
-         //  QVector <double> dOnMap = som->getDistMatrixOnMap() ;
-         //  QVector <double> d = som->getDistMatrix() ;
+          // som->setSomModel("../resultats/sm.txt");
 
-           //qDebug() <<"correlation entre les distances avant = "
-             //       << correlation(d, dOnMap) ;
 
      clock_t t1 = clock();
 
              //som->train(data, 0, 0.8, 0.9, 0.3);
              som->train(data,T_max->value(), dist,0.4, 0.5, 0.2,
                                              Rayon_init->value()) ; //,
+
+             QVector <double> dOnMap1 = som->getDistMatrixOnMap() ;
+             qmatrix vm = som->qcodebook() ;
+             QVector <double> d1 = getDistMatrix(vm) ;
+
+             //tabDoubleToFile(d1, "../resultats/distMVreel.txt") ;
+
+             qDebug() <<"correlation entre les distances après = "
+                      << correlation(d1, dOnMap1) ;
+
              // deuxième passe
              //som->train(data,T_max->value(),dist,0.3,0.4,0.1, 0) ;
 
@@ -289,9 +297,37 @@ void windowSom::classer()
                som->clustering(dtest, dist) ;
              else*/
                som->clustering(data, dist) ;
+               som->write_clusters(data.labels, "../resultats/classes_avant2.txt");
 
-            // QVector <int> clust = som->clusters() ;
+               QVector<trio> t = som->distMatrixVoisinage() ;
+               som->write_distMatrixVoisinage(t, "../resultats/distMV.txt");
 
+               //QVector<trio> tt = som->getDistMatrix() ;
+               //som->write_distMatrixVoisinage(tt, "../resultats/distMVreel.txt");
+               qDebug()<<t.size() ;
+               int ncls = som->nb_clusters() ;
+               qDebug()<<ncls ;
+               if (ncls > 8)
+               {  int n =  ncls - 8 ;
+                   som->reduire(t,n) ;
+                   som->write_clusters(data.labels, "../resultats/classes_apres2.txt");
+               }
+
+              // QVector<QString> sysets = read_labelsSynsets("../data/word2vec/word2synvectorsText8_3008300_onwn") ;
+
+              // qDebug() << "fmesureWordNet(som, labels) " ;
+               //fmesureWordNet(som, sysets) ;
+               //qDebug() << "f_mesureSomWordNet(som, labels) " ;
+               //f_mesureSomWordNet(som,labels);
+              // qDebug() << "precisionWordNet(som, labels) " ;
+               //precisionWordNet(som, sysets) ;
+               //qDebug() << labels.size() ;
+              // qDebug() << "precision1WordNet(som, labels) " ;
+              // precision1WordNet(som, sysets) ;
+
+             //  QVector <int> clust = som->clusters() ;
+             //  qDebug() <<"pureté_synsets  = "<<
+               //           purete_synsets(clust, sysets) ;
             // som->outTextFile(clust,"../resultats/clus_mnist_train.txt") ;
 
              //qDebug() << "taux de prédiction = " << som->getTauxPredict() ;
@@ -313,7 +349,16 @@ void windowSom::classer()
 
             // som->predict(dtest, "../resultats/sample_submission3.csv") ;
             // qDebug() <<"pureté = "<< purete(som, data.labels) ;
-            // fscore(som, data.labels) ;
+            // qDebug() <<"pureté  = "<< purete(clust, data.labels) ;
+             //fscore(som, data.labels) ;
+            // fscore(clust, data.labels) ;
+
+             // kmeans
+            // qDebug() <<"kmeans..." ;
+            // QVector<int> clusts = read_csv1("../data/MNIST/dense/clusters_EM");
+            // qDebug() <<"pureté  = "<< purete(clusts, data.labels) ;
+             //fscore(som, data.labels) ;
+            // fscore(clusts, data.labels) ;
 
 
 
@@ -334,7 +379,10 @@ void windowSom::classer()
                 else
                  {*/
                    som->write_clusters(data.labels, classesOut->text());
-                   som->imprimeClasses(data.labels, "../resultats/classes.txt");
+                   som->imprimeClasses(data.labels, "../resultats/classes_test.txt");
+                   som->imprimeClasses("../resultats/classes_id.txt");
+
+
                  //}
              }
 
@@ -355,19 +403,19 @@ void windowSom::classer()
 
 void windowSom::evaluer()
 {
-  /* data = loadData(vectors->text(),tdata->currentText()) ;
+   data = loadData(vectors->text(),tdata->currentText()) ;
     QVector<int> tabindx = read_csv1(motNeurone->text()) ;
     //"../data/wonawnvectorsWebsomArb-90-10-3.txt"
     qdataset centers = sample(data, tabindx) ; //kpp(data, 3);
-    saveData(centers, classesOut->text());*/
+    saveData(centers, classesOut->text());
 
 
-    qmatrix vects = randVectors(T_max->value(), N_som->value());
-    qDebug() << inertie(vects) ;
-    qmatrix vectsplus = randVectorsplus(T_max->value(), N_som->value(), M_som->value());
-    qDebug() << "\n" << inertie(vectsplus) ;
-    saveData(vects, "../resultats/randvects.txt") ;
-    saveData(vectsplus, "../resultats/randvectsplus.txt") ;
+    //qmatrix vects = randVectors(T_max->value(), N_som->value());
+    //qDebug() << inertie(vects) ;
+    //qmatrix vectsplus = randVectorsplus(T_max->value(), N_som->value(), M_som->value());
+    //qDebug() << "\n" << inertie(vectsplus) ;
+    //saveData(vects, "../resultats/randvects.txt") ;
+    // saveData(vectsplus, "../resultats/randvectsplus.txt") ;
 
 
 

@@ -19,6 +19,7 @@ Som::Som(unsigned size_vect, unsigned nlig, unsigned ncol, QString top)
           for (unsigned i(0); i<Lig; i++)
            for(unsigned j(0); j<Col; j++)
             {   SOM[i][j].nb_objets = 0 ;
+                SOM[i][j].lien = -1 ;
                 SOM[i][j].errq = 0.0 ;
                 SOM[i][j].umat = 0.0 ;
                 SOM[i][j].w_coeff = 1. ;
@@ -34,7 +35,7 @@ Som::Som(unsigned size_vect, unsigned nlig, unsigned ncol, QString top)
 }
 
 Som::Som(QString vecteurFile, QString topo)
-{ 
+{
     Topologie = topo ;
     if (! getSomModel(vecteurFile))
       { qDebug() << "les parametres sont invalides\n";
@@ -46,7 +47,7 @@ Som::Som()
 {
 }
 Som::~Som()
-{  
+{
   // SOM_clean();
 }
 
@@ -397,7 +398,7 @@ void Som::majVect(int x, int y, int r, double * vectCandidat, int temps, int Tma
               stopI = min(Lig-1,x+r),
               startJ = max(0,y-r),
               stopJ = min(Col-1,y+r);
- 
+
   double alpha,sigma,fctvoisin,dsq;
 
         alpha	= Alphai*(1.0- (0.+temps)/(0.+Tmax));
@@ -447,7 +448,7 @@ void Som::majVect(int x, int y, int r, double * vectCandidat, int temps, int Tma
           }
 
     }
-         
+
 }
 
 // sparse data
@@ -1098,7 +1099,7 @@ QString Som::getLabels(QVector <QString> labels, int i, int j)
       cpt ++ ;
       if (cpt > 10)
        { labs += "\n" ;
-	 cpt = 0 ;
+     cpt = 0 ;
        }
     }
  return labs ;
@@ -1131,7 +1132,7 @@ QString Som::getLabelN(int x, int y)
 {
     return SOM[x][y].labr ;
 }
-  
+
 /************************************************************************/
 // out files
 
@@ -1307,6 +1308,29 @@ void Som::imprimeClasses(QVector <QString> labels, QString f)
    file.close();
 }
 
+void Som::imprimeClasses(QString f)
+{
+  unsigned i,j;
+  int k ;
+
+    QFile file(f);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))  return;
+    QTextStream flux(&file);
+
+    for (i=0;  i < Lig; i++)
+     for (j=0; j < Col; j++)
+     { if (SOM[i][j].nb_objets != 0)
+        {flux<<"N["<<i<<"]["<<j<<"]:"<<"  "<< SOM[i][j].nb_objets <<endl ;
+
+         for(k = 0; k < SOM[i][j].classe.size();  k++ )
+          flux<<SOM[i][j].classe[k].id <<" ";
+            flux<<"\n\n";
+        }
+     }
+
+   file.close();
+}
+
 void Som::write_clusters(QVector <QString> labels, QString f)
 {
   unsigned i,j;
@@ -1329,7 +1353,7 @@ void Som::write_clusters(QVector <QString> labels, QString f)
 }
 
 void Som::imprimeIdIJDist(QString f)   // imprime un fichier texte: id i j distance
-{ if (SOM != NULL)			
+{ if (SOM != NULL)
   { unsigned i,j ;
     int k ;
     QFile file(f);
@@ -1346,7 +1370,7 @@ void Som::imprimeIdIJDist(QString f)   // imprime un fichier texte: id i j dista
     flux << "# Initialise_SOM_au_centre " << initial << endl;
     flux << "# QCI (HI) = " << QCI << endl ;
     flux << "# QCE (HO) = " << QCE << endl ;*/
-        
+
     /*********************************************************************/
     flux << Lig <<" "<< Col <<endl ;
     for (i=0;  i < Lig; i++)
@@ -1354,10 +1378,10 @@ void Som::imprimeIdIJDist(QString f)   // imprime un fichier texte: id i j dista
      { if (SOM[i][j].classe.size() != 0)
          for (k = 0; k < SOM[i][j].classe.size(); k++)
            flux<< SOM[i][j].classe[k].id <<" "<< i <<" "<< j <<" "<< SOM[i][j].classe[k].dist <<endl ;
-       
+
      }
     file.close();
-    
+
   }
 }
 
@@ -1370,7 +1394,7 @@ double Som::meanDist(int x, int y, int r)
               stopI = min(Lig-1,x+r),
               startJ = max(0,y-r),
               stopJ = min(Col-1,y+r);
- 
+
  double mdist = 0.0f;
  unsigned int nodes_number = 0;
  double dist;
@@ -1381,7 +1405,7 @@ double Som::meanDist(int x, int y, int r)
        { if ((i != x) || (j != y))
           { if (Topologie == "rect")
              {
-               nodes_number++; 
+               nodes_number++;
                mdist += distanceEuclidienne(SOM[x][y].vm.data(), SOM[i][j].vm.data(), Taille) ;
              }
 
@@ -1399,7 +1423,7 @@ double Som::meanDist(int x, int y, int r)
                 dist = pow((i-x),2) + pow((j6-y6),2);
                 if (dist <= (1.25)*r*r)
                 {
-                    nodes_number++; 
+                    nodes_number++;
                     mdist += distanceEuclidienne(SOM[x][y].vm.data(), SOM[i][j].vm.data(), Taille) ;
                 }
              }
@@ -1410,7 +1434,7 @@ double Som::meanDist(int x, int y, int r)
 
 void Som::calculateUMatrix(int rayon)
 {
-    
+
     for (unsigned x = 0; x < Lig; x++)
         for (unsigned y = 0; y < Col; y++)
          { if (SOM[x][y].nb_objets != 0)
@@ -1429,7 +1453,7 @@ int Som::setUmatrix(QString mon_fichier)
     unsigned i,j;
     for (i = 0 ; i < Lig; i++)
     { for (j = 0 ; j < Col; j++)
-      {  
+      {
         flux << SOM[i][j].umat<<" ";
        }
       flux<<"\n";
@@ -1448,10 +1472,10 @@ int Som::setUmatrixPlus(QString mon_fichier)
     unsigned i,j;
     for (i = 0 ; i < Lig; i++)
      for (j = 0 ; j < Col; j++)
-      {  
+      {
         flux << i<<" "<<j<<" "<<SOM[i][j].umat<<"\n";
        }
- 
+
   file.close() ;
  return 1;
 }
@@ -1459,20 +1483,28 @@ int Som::setUmatrixPlus(QString mon_fichier)
 /************************************************************************/
 
 
-QVector <double> Som::getDistMatrix()
+QVector <trio> Som::getDistMatrix()
 {   unsigned n = Lig*Col ;
-    QVector <double> distMatrix;
+    QVector <trio> distMatrix;
     for (unsigned i=0;  i < n-1; i++)
-     for (unsigned j=i+1; j < n; j++)
-     { unsigned x1 = i/Col ;
-       unsigned y1 = i%Col ;
-       unsigned x2 = j/Col ;
-       unsigned y2 = j%Col ;
-       distMatrix.append(distanceEuclidienne(SOM[x1][y1].vm.data(),
-                                             SOM[x2][y2].vm.data(), Taille));
-
-     }
-
+    { unsigned x1 = i/Col ;
+      unsigned y1 = i%Col ;
+      if (SOM[x1][y1].nb_objets != 0)
+       { for (unsigned j=i+1; j < n; j++)
+         { unsigned x2 = j/Col ;
+           unsigned y2 = j%Col ;
+           if (SOM[x2][y2].nb_objets != 0)
+           { trio T ;
+             T.Ci = i ;
+             T.Cj = j ;
+             T.dist = distanceEuclidienne(SOM[x1][y1].vm.data(),
+                                          SOM[x2][y2].vm.data(), Taille);
+             distMatrix.append(T) ;
+           }
+          }
+       }
+    }
+    qSort(distMatrix) ;
     return distMatrix ;
 }
 
@@ -1494,7 +1526,8 @@ QVector <double> Som::getDistMatrixOnMap()
               int x2 = j/Col ;
               int y2 = j%Col ;
 
-              dist = pow((x1-x2),2) + pow((y1-y2),2);
+             // dist = pow((x1-x2),2) + pow((y1-y2),2);
+              dist = pow( max( abs(x1-x2) , abs(y1-y2) ) , 2 );
               distMatrix.append(dist) ;
              }
          }
@@ -1515,7 +1548,8 @@ QVector <double> Som::getDistMatrixOnMap()
               y6 = (x1%2 == 0) ? 0.5 + y1 : y1;
               j6 = (x2%2 == 0) ? 0.5 + y2 : y2;
 
-              dist = pow((x1-x2),2) + pow((j6-y6),2);
+             // dist = pow((x1-x2),2) + pow((j6-y6),2);
+              dist = pow( max( abs(x1-x2) , abs(j6-y6) ) , 2 );
               distMatrix.append(dist) ;
             }
          }
@@ -1551,7 +1585,7 @@ void  Som::distVoisinage(QVector <trio> & distMatrix, int x, int y)
 
             if (Topologie == "hexa")
             {
-                y6 = (y%2 == 0) ? 0.5 + y : y;
+                y6 = (x%2 == 0) ? 0.5 + y : y;
                 j6 = (i%2 == 0) ? 0.5 + j : j;
 
                 dist = pow((i-x),2) + pow((j6-y6),2);
@@ -1561,8 +1595,8 @@ void  Som::distVoisinage(QVector <trio> & distMatrix, int x, int y)
             if (dist <= dmax)
              {
                  trio T ;
-                 T.i = x*Col+y ;
-                 T.j = i*Col+j ;
+                 T.Ci = x*Col+y ;
+                 T.Cj = i*Col+j ;
                  T.dist = distanceEuclidienne(SOM[x][y].vm.data(), SOM[i][j].vm.data(), Taille) ;
                  distMatrix.append(T);
              }
@@ -1580,6 +1614,24 @@ QVector <trio> Som::distMatrixVoisinage()
      }
     qSort(distMatrix) ;
     return distMatrix ;
+}
+
+void Som::write_distMatrixVoisinage(QVector <trio> t, QString f)
+{
+  int k ;
+  int size = t.size() ;
+
+    QFile file(f);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))  return;
+    QTextStream flux(&file);
+
+    for (k = 0;  k < size; k++)
+     {
+        flux<<t.at(k).Ci <<" "<<t.at(k).Cj <<" "<<t.at(k).dist;
+        flux<<"\n";
+     }
+
+   file.close();
 }
 
 /*****************************************************************
@@ -1666,12 +1718,69 @@ bool  Som::classificationMultiThread(qdataset &data, int nb_th)
         }
         threads.clear() ;
         return true ;
-
-
      }
      else
       { qDebug() << "ERREUR: clustering Impossible.";
         return false ;
       }
+}
+
+void Som::concatener(int a, int b)
+{
+   if (a != b)
+   { int  x1 = a/Col ;
+     int  y1 = a%Col ;
+     int  x2 = b/Col ;
+     int  y2 = b%Col ;
+      if ((SOM[x1][y1].lien == -1) && (SOM[x2][y2].lien == -1))
+      {
+        if (SOM[x1][y1].nb_objets > SOM[x2][y2].nb_objets)
+        {
+            for (int i = 0; i < SOM[x2][y2].nb_objets; i++)
+                SOM[x1][y1].classe.append(SOM[x2][y2].classe.at(i)) ;
+            SOM[x1][y1].nb_objets += SOM[x2][y2].nb_objets ;
+            SOM[x2][y2].nb_objets = 0 ;
+            //qDeleteAll(SOM[x2][y2].classe);
+            SOM[x2][y2].classe.clear() ;
+            SOM[x2][y2].lien = a ;
+            Nb_classes -- ;
+
+         }
+        else
+        {
+            for (int i = 0; i < SOM[x1][y1].nb_objets; i++)
+                SOM[x2][y2].classe.append(SOM[x1][y1].classe.at(i)) ;
+            SOM[x2][y2].nb_objets += SOM[x1][y1].nb_objets ;
+            SOM[x1][y1].nb_objets = 0 ;
+           // qDeleteAll(SOM[x1][y1].classe);
+            SOM[x1][y1].classe.clear() ;
+            SOM[x1][y1].lien = b ;
+            Nb_classes -- ;
+        }
+      }
+      else
+       { if ((SOM[x1][y1].lien != -1) && (SOM[x2][y2].lien == -1))
+            concatener(SOM[x1][y1].lien, b) ;
+         else
+           { if ((SOM[x1][y1].lien == -1) && (SOM[x2][y2].lien != -1))
+                concatener(a, SOM[x2][y2].lien) ;
+             else
+              concatener(SOM[x1][y1].lien, SOM[x2][y2].lien) ;
+           }
+        }
+   }
+}
+
+void Som::reduire(QVector<trio> t, int n)
+{ int size = t.size() ;
+    if (n <= size)
+    {
+        for (int i = 0; i < n; i++)
+        {   qDebug() << i ;
+            concatener(t.at(i).Ci, t.at(i).Cj);
+        }
+
+
+    }
 
 }
