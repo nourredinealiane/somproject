@@ -17,6 +17,12 @@ $ sh execute.sh
 $ cd build
 $ ./som
 
+
+```
+
+just a test
+just a test mery 
 ``` 
 
 I want to test master branch
+
