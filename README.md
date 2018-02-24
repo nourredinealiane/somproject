@@ -26,5 +26,3 @@ just a test mery
 
 I want to test master branch
 
-encore des tests ...
-
