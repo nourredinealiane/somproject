@@ -54,8 +54,8 @@ typedef double(*DISTANCE)(double *v1, double *v2, int dim);
 // la matrice de distances avec les coorrdonées
 struct trio
 {
-    int i, j ; 
-    float dist ; //distance entre les neurones i et j
+    int i, j ;
+    float dist ;
     bool operator<(const trio &other) const
      {
          return (dist > other.dist);
